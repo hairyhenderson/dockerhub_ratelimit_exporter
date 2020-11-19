@@ -48,7 +48,7 @@ func main() {
 		},
 	}
 
-	cmd.Flags().String("web.listen-address", ":9764", "Address at which to listen")
+	cmd.Flags().String("web.listen-address", ":9766", "Address at which to listen")
 
 	if err := cmd.ExecuteContext(ctx); err != nil {
 		fmt.Println(err)

@@ -24,7 +24,7 @@ The image name is provided as a query parameter when querying the exporter,
 and Prometheus-format metrics are returned, like this:
 
 ```console
-$ curl http://localhost:9764/limits?image=hairyhenderson/gomplate:v3.8.0
+$ curl http://localhost:9766/limits?image=hairyhenderson/gomplate:v3.8.0
 # HELP dockerhub_ratelimits_limit total number of pulls that can be performed during the window
 # TYPE dockerhub_ratelimits_limit gauge
 dockerhub_ratelimits_limit{image="hairyhenderson/gomplate:v3.8.0"} 100
@@ -53,7 +53,7 @@ scrape_configs:
         - prom/prometheus:v2.22.1
     static_configs:
       - targets:
-        - localhost:9764
+        - localhost:9766
 ```
 
 ## License
