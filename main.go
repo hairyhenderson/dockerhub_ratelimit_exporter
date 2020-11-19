@@ -11,18 +11,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-
+	"github.com/hairyhenderson/dockerhub_ratelimit_exporter/internal/version"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
-	"github.com/prometheus/common/version"
+	"github.com/spf13/cobra"
 )
 
 const prog = "dockerhub_ratelimit_exporter"
 
 func main() {
 	exitCode := 0
+
 	defer func() { os.Exit(exitCode) }()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -31,11 +31,11 @@ func main() {
 	cmd := &cobra.Command{
 		Use:     prog,
 		Short:   "A Prometheus-format exporter to report on DockerHub per-image rate limits",
-		Version: "0.0.1",
+		Version: version.Version,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			listenAddress, _ := cmd.Flags().GetString("web.listen-address")
 
-			log.Infof("Starting %s %s", prog, version.Version)
+			log.Infof("Starting %s %s", prog, cmd.Version)
 
 			hc := &http.Client{}
 
@@ -43,6 +43,7 @@ func main() {
 			http.Handle("/limits", limitsHandler(hc))
 
 			log.Infoln("Listening on", listenAddress)
+
 			return http.ListenAndServe(listenAddress, nil)
 		},
 	}
@@ -51,6 +52,7 @@ func main() {
 
 	if err := cmd.ExecuteContext(ctx); err != nil {
 		fmt.Println(err)
+
 		exitCode = -1
 	}
 }
@@ -68,14 +70,15 @@ func limitsHandler(hc *http.Client) http.Handler {
 		images := []string{}
 		for k, vs := range r.URL.Query() {
 			if k == "image" {
-				for _, v := range vs {
-					images = append(images, v)
-				}
+				images = append(images, vs...)
+
+				break
 			}
 		}
 
 		if len(images) == 0 {
 			http.Error(w, "image parameter is missing", http.StatusBadRequest)
+
 			return
 		}
 
@@ -95,6 +98,7 @@ func limitsHandler(hc *http.Client) http.Handler {
 			li, err := check(ctx, hc, image)
 			if err != nil {
 				http.Error(w, "failed to check limits", http.StatusBadGateway)
+
 				return
 			}
 
@@ -118,6 +122,7 @@ type limitInfo struct {
 func check(ctx context.Context, hc *http.Client, img string) (l limitInfo, err error) {
 	parts := strings.SplitN(img, ":", 2)
 	image, tag := parts[0], "latest"
+
 	if len(parts) > 1 {
 		tag = parts[1]
 	}
@@ -154,27 +159,30 @@ func check(ctx context.Context, hc *http.Client, img string) (l limitInfo, err e
 
 	limit := res.Header.Get("Ratelimit-Limit")
 	remaining := res.Header.Get("Ratelimit-Remaining")
-	parts = strings.SplitN(limit, ";w=", 2)
-	l.limit, err = strconv.Atoi(parts[0])
-	if err != nil {
-		return l, fmt.Errorf("failed to convert %s: %w", parts[0], err)
-	}
-	parts = strings.SplitN(remaining, ";w=", 2)
-	l.remaining, err = strconv.Atoi(parts[0])
-	if err != nil {
-		return l, fmt.Errorf("failed to convert %s: %w", parts[0], err)
-	}
-	w, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return l, fmt.Errorf("failed to convert %s: %w", parts[1], err)
-	}
-	l.window = time.Duration(w) * time.Second
+
+	l.limit, _ = parseHeader(limit)
+	l.remaining, l.window = parseHeader(remaining)
 
 	return l, nil
 }
 
+func parseHeader(s string) (int, time.Duration) {
+	parts := strings.SplitN(s, ";w=", 2)
+
+	num, _ := strconv.Atoi(parts[0])
+	dur := time.Duration(0)
+
+	if len(parts) > 1 {
+		i, _ := strconv.Atoi(parts[1])
+		dur = time.Duration(i) * time.Second
+	}
+
+	return num, dur
+}
+
 func authenticate(ctx context.Context, hc *http.Client, image string) (tok string, err error) {
 	tokenURL := fmt.Sprintf("https://auth.docker.io/token?service=registry.docker.io&scope=repository:%s:pull", image)
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, tokenURL, nil)
 	if err != nil {
 		return "", err
@@ -194,6 +202,7 @@ func authenticate(ctx context.Context, hc *http.Client, image string) (tok strin
 	if err != nil {
 		return "", err
 	}
+
 	return r.Token, nil
 }
 
