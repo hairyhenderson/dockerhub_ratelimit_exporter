@@ -1,0 +1,30 @@
+name: Build
+on: [push]
+
+jobs:
+  linux-build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/hairyhenderson/gomplate-ci-build:latest
+    env:
+      DOCKER_BUILDKIT: 1
+      DOCKER_CLI_EXPERIMENTAL: enabled
+    steps:
+      - run: |
+          git config --global user.email "bogus@example.com"
+          git config --global user.name "Someone"
+      - uses: actions/checkout@v1
+      - run: make build
+      - name: Save binary
+        uses: actions/upload-artifact@v1
+        with:
+          name: dockerhub_ratelimit_exporter
+          path: bin/dockerhub_ratelimit_exporter
+      - run: make test
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/hairyhenderson/gomplate-ci-build:latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: make lint
