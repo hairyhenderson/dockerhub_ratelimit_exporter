@@ -1,0 +1,72 @@
+name: Docker Build
+on: [push]
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - '5000:5000'
+    env:
+      DOCKER_BUILDKIT: 1
+      DOCKER_CLI_EXPERIMENTAL: enabled
+      IMG_NAME: dockerhub_ratelimit_exporter
+    steps:
+    - name: enable experimental mode
+      run: |
+        mkdir -p ~/.docker
+        echo '{"experimental": "enabled"}' > ~/.docker/config.json
+    - name: Install BuildX
+      run: |
+        mkdir -p ~/.docker/cli-plugins
+        curl -SL -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.4.2/buildx-v0.4.2.linux-amd64
+        chmod 755 ~/.docker/cli-plugins/docker-buildx
+    - name: Create BuildX Builder
+      run: |
+        docker buildx create \
+          --name builder \
+          --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7,linux/ppc64le,linux/s390x,linux/386 \
+          --use \
+          --driver docker-container --driver-opt image=moby/buildkit:buildx-stable-1,network=host
+        docker buildx ls
+        docker ps
+        docker images
+    - run: docker info && docker version
+    - uses: actions/checkout@v1
+    - name: determine if this is a tag
+      run: |
+        if (git describe --abbrev=0 --exact-match &>/dev/null); then
+          tag=$(git describe --abbrev=0 --exact-match)
+          echo "is_tag=true" >> $GITHUB_ENV
+          echo "git_tag=$tag" >> $GITHUB_ENV
+          # splits the major version from $tag - assumes it's a 3-part semver
+          echo "major_version=${tag%%\.*}" >> $GITHUB_ENV
+        fi
+      if: github.repository == 'hairyhenderson/dockerhub_ratelimit_exporter'
+    - name: login
+      run: |
+        echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login --username hairyhenderson --password-stdin
+    - name: Build & Push (non-master)
+      run: |
+        set -ex
+        make docker-multi COMMIT=${{ github.sha }} DOCKER_REPO=localhost:5000/${IMG_NAME} BUILDX_ACTION=--push
+
+        docker buildx imagetools create --dry-run -t localhost:5000/${IMG_NAME}:dev localhost:5000/${IMG_NAME}:latest
+        docker buildx imagetools create --dry-run -t localhost:5000/${IMG_NAME}:dev-alpine localhost:5000/${IMG_NAME}:alpine
+      if: github.repository != 'hairyhenderson/dockerhub_ratelimit_exporter' || github.ref != 'refs/heads/master'
+    - name: Build & Push (master)
+      run: |
+        make docker-multi COMMIT=${{ github.sha }} DOCKER_REPO=hairyhenderson/${IMG_NAME} BUILDX_ACTION=--push
+      if: github.repository == 'hairyhenderson/dockerhub_ratelimit_exporter' && github.ref == 'refs/heads/master'
+    - name: Build & Push (tagged release)
+      run: |
+        make docker-multi COMMIT=${{ github.sha }} DOCKER_REPO=hairyhenderson/${IMG_NAME} BUILDX_ACTION=--push
+
+        set -x
+        docker buildx imagetools create -t hairyhenderson/${IMG_NAME}:${git_tag} hairyhenderson/${IMG_NAME}:latest
+        docker buildx imagetools create -t hairyhenderson/${IMG_NAME}:${major_version} hairyhenderson/${IMG_NAME}:latest
+        docker buildx imagetools create -t hairyhenderson/${IMG_NAME}:${git_tag}-alpine hairyhenderson/${IMG_NAME}:alpine
+        docker buildx imagetools create -t hairyhenderson/${IMG_NAME}:${major_version}-alpine hairyhenderson/${IMG_NAME}:alpine
+      if: github.repository == 'hairyhenderson/dockerhub_ratelimit_exporter' && env.is_tag == 'true'
