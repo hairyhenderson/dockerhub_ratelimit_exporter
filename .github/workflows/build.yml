@@ -13,7 +13,7 @@ jobs:
       - run: |
           git config --global user.email "bogus@example.com"
           git config --global user.name "Someone"
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v2.3.5
       - run: make build
       - name: Save binary
         uses: actions/upload-artifact@v2.2.4
@@ -25,12 +25,12 @@ jobs:
     container:
       image: ghcr.io/hairyhenderson/gomplate-ci-build:latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v2.3.5
       - run: make test
   lint:
     runs-on: ubuntu-20.04
     container:
       image: ghcr.io/hairyhenderson/gomplate-ci-build:latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v2.3.5
       - run: make ci-lint
