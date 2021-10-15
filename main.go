@@ -207,8 +207,8 @@ func authenticate(ctx context.Context, hc *http.Client, image string) (tok strin
 }
 
 type response struct {
+	IssuedAt    time.Time `json:"issued_at"`
 	Token       string    `json:"token"`
 	AccessToken string    `json:"access_token"`
 	ExpiresIn   int       `json:"expires_in"`
-	IssuedAt    time.Time `json:"issued_at"`
 }
