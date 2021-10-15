@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.1.7-experimental
-FROM --platform=linux/amd64 golang:1.15.5-alpine AS build
+FROM --platform=linux/amd64 golang:1.17.2-alpine AS build
 
 ARG PKG_NAME
 ARG TARGETOS
@@ -40,7 +40,7 @@ COPY --from=build /bin/${PKG_NAME}_${TARGETOS}-${TARGETARCH}${TARGETVARIANT} /${
 
 ENTRYPOINT [ "/${PKG_NAME}" ]
 
-FROM alpine:3.12.1 AS alpine
+FROM alpine:3.14.2 AS alpine
 
 ARG PKG_NAME
 ARG VCS_REF
