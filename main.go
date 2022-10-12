@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -44,7 +44,12 @@ func main() {
 
 			log.Infoln("Listening on", listenAddress)
 
-			return http.ListenAndServe(listenAddress, nil)
+			srv := &http.Server{
+				Addr:              listenAddress,
+				ReadHeaderTimeout: 1 * time.Second,
+			}
+
+			return srv.ListenAndServe()
 		},
 	}
 
@@ -151,7 +156,7 @@ func check(ctx context.Context, hc *http.Client, img string) (l limitInfo, err e
 	}
 
 	defer res.Body.Close()
-	b, _ := ioutil.ReadAll(res.Body)
+	b, _ := io.ReadAll(res.Body)
 
 	if res.StatusCode != http.StatusOK {
 		return l, fmt.Errorf("HTTP status %d: %q", res.StatusCode, string(b))
