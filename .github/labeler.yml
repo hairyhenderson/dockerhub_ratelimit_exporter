@@ -4,11 +4,8 @@ documentation:
 - '*.md'
 
 dependencies:
-- Gopkg.lock
-- Gopkg.toml
 - go.mod
 - go.sum
-- vendor/**/*
 
 build:
 - .github/workflows/*
