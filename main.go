@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,7 +15,6 @@ import (
 	"github.com/hairyhenderson/dockerhub_ratelimit_exporter/internal/version"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/log"
 	"github.com/spf13/cobra"
 )
 
@@ -35,14 +35,14 @@ func main() {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			listenAddress, _ := cmd.Flags().GetString("web.listen-address")
 
-			log.Infof("Starting %s %s", prog, cmd.Version)
+			log.Printf("Starting %s %s\n", prog, cmd.Version)
 
 			hc := &http.Client{}
 
 			http.Handle("/metrics", promhttp.Handler())
 			http.Handle("/limits", limitsHandler(hc))
 
-			log.Infoln("Listening on", listenAddress)
+			log.Println("Listening on", listenAddress)
 
 			srv := &http.Server{
 				Addr:              listenAddress,

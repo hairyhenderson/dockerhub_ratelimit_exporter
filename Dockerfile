@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.1.7-experimental
+# syntax=docker/dockerfile:1.5.2-labs
 FROM --platform=linux/amd64 golang:1.20-alpine AS build
 
 ARG PKG_NAME
