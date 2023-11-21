@@ -56,7 +56,7 @@ COPY --from=build /bin/${PKG_NAME}_${TARGETOS}-${TARGETARCH}${TARGETVARIANT} /${
 
 ENTRYPOINT [ "/bin/${PKG_NAME}" ]
 
-FROM --platform=windows/amd64 mcr.microsoft.com/windows/nanoserver:2009 AS release-windows
+FROM --platform=windows/amd64 mcr.microsoft.com/windows/nanoserver:2009-KB4579311 AS release-windows
 
 ARG PKG_NAME
 ARG TARGETOS
