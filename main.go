@@ -32,7 +32,7 @@ func main() {
 		Use:     prog,
 		Short:   "A Prometheus-format exporter to report on DockerHub per-image rate limits",
 		Version: version.Version,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			listenAddress, _ := cmd.Flags().GetString("web.listen-address")
 
 			log.Printf("Starting %s %s\n", prog, cmd.Version)
@@ -73,6 +73,7 @@ func createGaugeVec(ns, name, help string, labels []string) *prometheus.GaugeVec
 func limitsHandler(hc *http.Client) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		images := []string{}
+
 		for k, vs := range r.URL.Query() {
 			if k == "image" {
 				images = append(images, vs...)
@@ -89,6 +90,7 @@ func limitsHandler(hc *http.Client) http.Handler {
 
 		ctx, cancel := context.WithCancel(r.Context())
 		defer cancel()
+
 		r = r.WithContext(ctx)
 
 		registry := prometheus.NewRegistry()
