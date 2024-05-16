@@ -1,12 +1,18 @@
 documentation:
-- docs/**/*
-- docs-src/**/*
-- '*.md'
+  - changed_files:
+    - any-glob-to-any-file:
+      - docs/**/*
+      - docs-src/**/*
+      - '*.md'
 
 dependencies:
-- go.mod
-- go.sum
+  - changed_files:
+    - any-glob-to-any-file:
+      - go.mod
+      - go.sum
 
 build:
-- .github/workflows/*
-- Makefile
+  - changed_files:
+    - any-glob-to-any-file:
+      - .github/workflows/*
+      - Makefile
