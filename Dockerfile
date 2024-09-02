@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.5.2-labs
-FROM --platform=linux/amd64 golang:1.22-alpine AS build
+FROM --platform=linux/amd64 golang:1.23-alpine AS build
 
 ARG PKG_NAME
 ARG TARGETOS
