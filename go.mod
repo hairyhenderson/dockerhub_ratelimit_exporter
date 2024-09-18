@@ -3,7 +3,7 @@ module github.com/hairyhenderson/dockerhub_ratelimit_exporter
 go 1.22.2
 
 require (
-	github.com/prometheus/client_golang v1.20.2
+	github.com/prometheus/client_golang v1.20.4
 	github.com/spf13/cobra v1.8.1
 )
 
