@@ -40,7 +40,7 @@ COPY --from=build /bin/${PKG_NAME}_${TARGETOS}-${TARGETARCH}${TARGETVARIANT} /${
 
 ENTRYPOINT [ "/${PKG_NAME}" ]
 
-FROM alpine:3.20 AS alpine
+FROM alpine:3.21 AS alpine
 
 ARG PKG_NAME
 ARG VCS_REF
