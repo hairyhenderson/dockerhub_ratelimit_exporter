@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: make build
       - name: Save binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dockerhub_ratelimit_exporter
           path: bin/dockerhub_ratelimit_exporter
