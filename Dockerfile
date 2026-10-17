@@ -1,5 +1,5 @@
-# syntax=docker/dockerfile:1.5.2-labs
-FROM --platform=linux/amd64 golang:1.24-alpine AS build
+# syntax=docker/dockerfile:1.5.2-labs@sha256:f2e91734a84c0922ff47aa4098ab775f1dfa932430d2888dd5cad5251fafdac4
+FROM --platform=linux/amd64 golang:1.24-alpine@sha256:8bee1901f1e530bfb4a7850aa7a479d17ae3a18beb6e09064ed54cfd245b7191 AS build
 
 ARG PKG_NAME
 ARG TARGETOS
@@ -40,7 +40,7 @@ COPY --from=build /bin/${PKG_NAME}_${TARGETOS}-${TARGETARCH}${TARGETVARIANT} /${
 
 ENTRYPOINT [ "/${PKG_NAME}" ]
 
-FROM alpine:3.23 AS alpine
+FROM alpine:3.23@sha256:85fe1e81d6758c208f3e1eed4338a1997e19d4be002d4dd32d3100c9a8c010a0 AS alpine
 
 ARG PKG_NAME
 ARG VCS_REF
@@ -56,7 +56,7 @@ COPY --from=build /bin/${PKG_NAME}_${TARGETOS}-${TARGETARCH}${TARGETVARIANT} /${
 
 ENTRYPOINT [ "/bin/${PKG_NAME}" ]
 
-FROM --platform=windows/amd64 mcr.microsoft.com/windows/nanoserver:2009-KB4579311 AS release-windows
+FROM --platform=windows/amd64 mcr.microsoft.com/windows/nanoserver:2009-KB4579311@sha256:b9d2bb3399baac0ce0881ac82f03e759dadcf4edf751ebd9682b1435f6b9b71d AS release-windows
 
 ARG PKG_NAME
 ARG TARGETOS
