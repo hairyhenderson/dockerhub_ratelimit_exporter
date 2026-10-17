@@ -18,7 +18,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const prog = "dockerhub_ratelimit_exporter"
+const (
+	prog       = "dockerhub_ratelimit_exporter"
+	labelImage = "image"
+)
 
 func main() {
 	exitCode := 0
@@ -75,7 +78,7 @@ func limitsHandler(hc *http.Client) http.Handler {
 		images := []string{}
 
 		for k, vs := range r.URL.Query() {
-			if k == "image" {
+			if k == labelImage {
 				images = append(images, vs...)
 
 				break
@@ -95,9 +98,9 @@ func limitsHandler(hc *http.Client) http.Handler {
 
 		registry := prometheus.NewRegistry()
 		ns := "dockerhub_ratelimits"
-		limit := createGaugeVec(ns, "limit", "total number of pulls that can be performed during the window", []string{"image"})
-		remaining := createGaugeVec(ns, "remaining", "number of pulls remaining for the window", []string{"image"})
-		window := createGaugeVec(ns, "window_seconds", "the length of the time window", []string{"image"})
+		limit := createGaugeVec(ns, "limit", "total number of pulls that can be performed during the window", []string{labelImage})
+		remaining := createGaugeVec(ns, "remaining", "number of pulls remaining for the window", []string{labelImage})
+		window := createGaugeVec(ns, "window_seconds", "the length of the time window", []string{labelImage})
 
 		registry.MustRegister(limit, remaining, window)
 
@@ -109,7 +112,7 @@ func limitsHandler(hc *http.Client) http.Handler {
 				return
 			}
 
-			l := prometheus.Labels{"image": image}
+			l := prometheus.Labels{labelImage: image}
 			limit.With(l).Set(float64(li.limit))
 			remaining.With(l).Set(float64(li.remaining))
 			window.With(l).Set(li.window.Seconds())
